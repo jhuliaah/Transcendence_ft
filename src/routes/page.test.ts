@@ -5,5 +5,5 @@ import Page from './+page.svelte';
 it('renders the home page heading', () => {
   render(Page);
 
-  expect(screen.getByRole('heading', { name: 'Welcome to SvelteKit' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'ft_transcendence' })).toBeTruthy();
 });
