@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by ailbezer, jhualves, ratanaka and yvieira-*
+_This project has been created as part of the 42 curriculum by ailbezer, jhualves, ratanaka and yvieira-_
 
 # Transcendence
 
@@ -57,22 +57,23 @@ make compose-down
 
 ### Useful commands
 
-| Command | Description |
-| --- | --- |
-| `make lint` | Run ESLint. |
-| `make check` | Run Svelte and TypeScript checks. |
-| `make test` | Run the Vitest test suite. |
-| `make build` | Create the production build. |
-| `make verify` | Run lint, checks, tests, and the production build. |
+| Command             | Description                                                    |
+| ------------------- | -------------------------------------------------------------- |
+| `make lint`         | Run ESLint.                                                    |
+| `make check`        | Run Svelte and TypeScript checks.                              |
+| `make format-check` | Check formatting with Prettier.                                |
+| `make test`         | Run the Vitest test suite.                                     |
+| `make build`        | Create the production build.                                   |
+| `make verify`       | Run formatting, lint, checks, tests, and the production build. |
 
 ## Team Information
 
-| Member (login) | Role(s) | Responsibilities |
-| --- | --- | --- |
-| *ailbezer* | To be defined | To be defined. |
-| *jhualves* | To be defined | To be defined. |
-| *ratanaka* | To be defined | To be defined. |
-| *yvieira-* | To be defined | To be defined. |
+| Member (login) | Role(s)       | Responsibilities |
+| -------------- | ------------- | ---------------- |
+| _ailbezer_     | To be defined | To be defined.   |
+| _jhualves_     | To be defined | To be defined.   |
+| _ratanaka_     | To be defined | To be defined.   |
+| _yvieira-_     | To be defined | To be defined.   |
 
 ## Project Management
 
@@ -82,13 +83,13 @@ make compose-down
 
 ## Technical Stack
 
-| Area | Technology | Usage and rationale |
-| --- | --- | --- |
-| Frontend | Svelte 5, SvelteKit 3, TypeScript 6, and Vite 8 | Web application and user interface. Rationale: To be defined. |
-| Backend | SvelteKit with Node.js 24 LTS (`node:24-alpine` in Docker) | The project is configured to build and run a SvelteKit application with the Node adapter. Endpoints and business logic: To be defined. |
-| Database | PostgreSQL 17 (`postgres:17-alpine` image) | Configured as a Docker Compose service; the schema and application integration are not yet defined. Rationale: To be defined. |
-| Infrastructure | Docker Compose and Nginx | Local service orchestration and HTTPS reverse proxy for the application. |
-| Testing and quality | Vitest, Testing Library, ESLint, and svelte-check | Testing, linting, and static and type checks. |
+| Area                | Technology                                                 | Usage and rationale                                                                                                                    |
+| ------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend            | Svelte 5, SvelteKit 3, TypeScript 6, and Vite 8            | Web application and user interface. Rationale: To be defined.                                                                          |
+| Backend             | SvelteKit with Node.js 24 LTS (`node:24-alpine` in Docker) | The project is configured to build and run a SvelteKit application with the Node adapter. Endpoints and business logic: To be defined. |
+| Database            | PostgreSQL 17 (`postgres:17-alpine` image)                 | Configured as a Docker Compose service; the schema and application integration are not yet defined. Rationale: To be defined.          |
+| Infrastructure      | Docker Compose and Nginx                                   | Local service orchestration and HTTPS reverse proxy for the application.                                                               |
+| Testing and quality | Vitest, Testing Library, ESLint, and svelte-check          | Testing, linting, and static and type checks.                                                                                          |
 
 ## Database Schema
 
@@ -101,18 +102,18 @@ The database schema has not yet been defined or implemented. PostgreSQL is confi
 
 ## Features List
 
-| Feature | Description | Team member(s) | Status |
-| --- | --- | --- | --- |
-| Initial application scaffold | SvelteKit starter page; it is not yet a product feature. | To be defined | Present in the repository |
-| Product features | To be defined according to the project scope. | To be defined | Not implemented |
+| Feature                      | Description                                              | Team member(s) | Status                    |
+| ---------------------------- | -------------------------------------------------------- | -------------- | ------------------------- |
+| Initial application scaffold | SvelteKit starter page; it is not yet a product feature. | To be defined  | Present in the repository |
+| Product features             | To be defined according to the project scope.            | To be defined  | Not implemented           |
 
 ## Modules
 
 Modules have not yet been selected. Update this section once the project choices have been confirmed.
 
-| Module | Category | Points | Rationale and implementation | Team member(s) |
-| --- | --- | --- | --- | --- |
-| To be defined | Major or Minor | To be defined (Major = 2 points; Minor = 1 point) | To be defined. | To be defined |
+| Module        | Category       | Points                                            | Rationale and implementation | Team member(s) |
+| ------------- | -------------- | ------------------------------------------------- | ---------------------------- | -------------- |
+| To be defined | Major or Minor | To be defined (Major = 2 points; Minor = 1 point) | To be defined.               | To be defined  |
 
 **Total points:** To be defined. Major modules are worth 2 points and Minor modules are worth 1 point.
 
@@ -121,11 +122,11 @@ Modules have not yet been selected. Update this section once the project choices
 Describe each person's work, linking contributions to features, modules, or components and noting challenges and solutions.
 
 | Member (login) | Specific contributions | Challenges and solutions |
-| --- | --- | --- |
-| *ailbezer* | To be defined. | To be defined. |
-| *jhualves* | To be defined. | To be defined. |
-| *ratanaka* | To be defined. | To be defined. |
-| *yvieira-* | To be defined. | To be defined. |
+| -------------- | ---------------------- | ------------------------ |
+| _ailbezer_     | To be defined.         | To be defined.           |
+| _jhualves_     | To be defined.         | To be defined.           |
+| _ratanaka_     | To be defined.         | To be defined.           |
+| _yvieira-_     | To be defined.         | To be defined.           |
 
 ## Resources
 

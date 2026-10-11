@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import Page from './+page.svelte';
 
 it('renders the home page heading', () => {
-	render(Page);
+  render(Page);
 
-	expect(screen.getByRole('heading', { name: 'Welcome to SvelteKit' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Welcome to SvelteKit' })).toBeTruthy();
 });

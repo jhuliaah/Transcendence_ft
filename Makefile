@@ -3,7 +3,7 @@
 NPM ?= npm
 COMPOSE ?= docker compose
 
-.PHONY: help install dev build preview lint check check-watch test test-watch verify clean clean-deps compose-up compose-down compose-logs compose-ps
+.PHONY: help install dev build preview lint check check-watch format-check test test-watch verify clean clean-deps compose-up compose-down compose-logs compose-ps
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  make %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -26,6 +26,9 @@ lint: ## Run ESLint
 check: ## Run Svelte and TypeScript checks
 	$(NPM) run check
 
+format-check: ## Check formatting with Prettier
+	$(NPM) run format:check
+
 check-watch: ## Run Svelte and TypeScript checks in watch mode
 	$(NPM) run check:watch
 
@@ -35,7 +38,7 @@ test: ## Run the test suite once
 test-watch: ## Run Vitest in watch mode
 	$(NPM) exec vitest
 
-verify: lint check test build ## Run all quality checks and production build
+verify: format-check lint check test build ## Run all quality checks and production build
 
 clean: ## Remove generated build and framework output
 	rm -rf .svelte-kit build .output .vercel .netlify .wrangler
