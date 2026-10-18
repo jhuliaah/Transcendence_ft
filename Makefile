@@ -3,7 +3,7 @@
 NPM ?= npm
 COMPOSE ?= docker compose
 
-.PHONY: help install dev build preview lint check check-watch format-check test test-watch verify clean clean-deps compose-up compose-down compose-logs compose-ps
+.PHONY: help install dev build preview lint check check-watch format-check test test-integration test-watch verify clean clean-deps compose-up compose-down compose-logs compose-ps
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  make %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -38,7 +38,10 @@ test: ## Run the test suite once
 test-watch: ## Run Vitest in watch mode
 	$(NPM) exec vitest
 
-verify: format-check lint check test build ## Run all quality checks and production build
+test-integration: ## Run integration tests with a temporary PostgreSQL database
+	$(NPM) run test:integration
+
+verify: format-check lint check test test-integration build ## Run all quality checks, tests, and production build
 
 clean: ## Remove generated build and framework output
 	rm -rf .svelte-kit build .output .vercel .netlify .wrangler
