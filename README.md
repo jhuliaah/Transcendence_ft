@@ -4,7 +4,7 @@ _This project has been created as part of the 42 curriculum by ailbezer, jhualve
 
 ## Description
 
-Its goals, functional scope, and key product features are still to be defined by the team. At this stage, the repository contains the initial structure for a web application using SvelteKit and a Docker Compose setup.
+Its goals, functional scope, and key product features are still to be defined by the team. The repository contains a SvelteKit application, a PostgreSQL persistence foundation using Prisma, and a Docker Compose setup.
 
 **Key features:** To be defined.
 
@@ -33,7 +33,7 @@ Its goals, functional scope, and key product features are still to be defined by
 
 4. Open the URL printed by Vite in the terminal (usually `http://localhost:5173`).
 
-No database configuration is currently required to start the development server.
+Database configuration is not required just to start the development server. Database-backed endpoints, including `/health`, require a valid `DATABASE_URL`.
 
 ### Run with Docker Compose
 
@@ -57,14 +57,15 @@ make compose-down
 
 ### Useful commands
 
-| Command             | Description                                                    |
-| ------------------- | -------------------------------------------------------------- |
-| `make lint`         | Run ESLint.                                                    |
-| `make check`        | Run Svelte and TypeScript checks.                              |
-| `make format-check` | Check formatting with Prettier.                                |
-| `make test`         | Run the Vitest test suite.                                     |
-| `make build`        | Create the production build.                                   |
-| `make verify`       | Run formatting, lint, checks, tests, and the production build. |
+| Command                 | Description                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| `make lint`             | Run ESLint.                                                                         |
+| `make check`            | Run Svelte and TypeScript checks.                                                   |
+| `make format-check`     | Check formatting with Prettier.                                                     |
+| `make test`             | Run the Vitest test suite.                                                          |
+| `make test-integration` | Run integration tests against a temporary PostgreSQL database (requires Docker).    |
+| `make build`            | Create the production build.                                                        |
+| `make verify`           | Run formatting, lint, checks, unit and integration tests, and the production build. |
 
 ## Team Information
 
@@ -87,17 +88,18 @@ make compose-down
 | ------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Frontend            | Svelte 5, SvelteKit 3, TypeScript 6, and Vite 8            | Web application and user interface. Rationale: To be defined.                                                                          |
 | Backend             | SvelteKit with Node.js 24 LTS (`node:24-alpine` in Docker) | The project is configured to build and run a SvelteKit application with the Node adapter. Endpoints and business logic: To be defined. |
-| Database            | PostgreSQL 17 (`postgres:17-alpine` image)                 | Configured as a Docker Compose service; the schema and application integration are not yet defined. Rationale: To be defined.          |
+| Database            | PostgreSQL 17 (`postgres:17-alpine` image) and Prisma 7    | Prisma schema, migrations, and a PostgreSQL adapter provide the initial persistence layer.                                             |
 | Infrastructure      | Docker Compose and Nginx                                   | Local service orchestration and HTTPS reverse proxy for the application.                                                               |
 | Testing and quality | Vitest, Testing Library, ESLint, and svelte-check          | Testing, linting, and static and type checks.                                                                                          |
 
 ## Database Schema
 
-The database schema has not yet been defined or implemented. PostgreSQL is configured in Compose, but tables, fields, and relationships are still **to be defined**.
+The initial Prisma schema defines the persistence models used as a foundation for user and authentication data. Authentication flows are not implemented yet.
 
-- **Tables/collections:** To be defined.
-- **Relationships:** To be defined.
-- **Fields and data types:** To be defined.
+- **User:** `id`, unique `email`, nullable `passwordHash`, `name`, and `avatarUrl`, and `createdAt`.
+- **Session:** `id`, `userId`, and `expiresAt`; sessions belong to a user and are deleted when that user is deleted.
+- **OAuthAccount:** `id`, `provider`, `providerUserId`, and `userId`; provider identity pairs are unique, and accounts belong to a user.
+- **Migrations:** Stored in `prisma/migrations` and applied with `npm run db:deploy`.
 - **Diagram:** To be added once the schema is established.
 
 ## Features List
@@ -135,9 +137,15 @@ Describe each person's work, linking contributions to features, modules, or comp
 - [TypeScript documentation](https://www.typescriptlang.org/docs/)
 - [Node.js v24 documentation](https://nodejs.org/docs/latest-v24.x/api/)
 - [PostgreSQL 17 documentation](https://www.postgresql.org/docs/17/)
+- [Prisma documentation](https://www.prisma.io/docs)
+- [Prisma PostgreSQL driver adapter](https://www.prisma.io/docs/orm/overview/databases/postgresql#using-the-node-postgres-driver)
 - [Docker Compose documentation](https://docs.docker.com/compose/)
 - [Nginx documentation](https://nginx.org/en/docs/)
 - [Vite documentation](https://vite.dev/guide/)
+- [Vitest documentation](https://vitest.dev/)
+- [Testing Library documentation](https://testing-library.com/docs/)
+- [ESLint documentation](https://eslint.org/docs/latest/)
+- [Prettier documentation](https://prettier.io/docs/)
 
 ### AI Usage
 
