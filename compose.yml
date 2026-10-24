@@ -7,9 +7,24 @@ services:
       - app
 
   app:
-    build: .
+    build:
+      context: .
+      target: production
     expose:
       - '3000'
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  db-tools:
+    profiles: ['tools']
+    build:
+      context: .
+      target: build
+    entrypoint: ['npm']
+    command: ['run', 'db:deploy']
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:

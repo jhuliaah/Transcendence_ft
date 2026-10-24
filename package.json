@@ -5,19 +5,34 @@
   "type": "module",
   "engines": {
     "node": ">=24.21.0",
-    "npm": ">=11.19.0"
+    "npm": "11.19.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.19.0",
+      "onFail": "error"
+    }
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2",
+    "mysql2": "^3.24.5"
   },
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run src",
+    "test:integration": "bash scripts/test-integration.sh",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo '' && husky",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
@@ -30,6 +45,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/svelte": "^5.4.2",
+    "@types/pg": "^8.23.1",
     "eslint": "^10.12.0",
     "eslint-plugin-svelte": "^3.23.1",
     "globals": "^17.13.0",
@@ -38,9 +54,11 @@
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^4.1.1",
+    "prisma": "^7.10.0",
     "svelte": "^5.56.7",
     "svelte-check": "^4.6.0",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.0",
@@ -53,5 +71,16 @@
   "lint-staged": {
     "**/*.{cjs,css,cts,html,js,md,mdx,mjs,mts,svelte,ts,yaml,yml}": "prettier --write",
     "**/!(*package-lock).{json,jsonc}": "prettier --write"
+  },
+  "allowScripts": {
+    "prisma@7.10.0": true,
+    "@prisma/engines@7.10.0": true,
+    "esbuild@0.28.2": true
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "dotenv": "^18.0.7",
+    "pg": "^8.23.1"
   }
 }
