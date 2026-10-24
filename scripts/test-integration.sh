@@ -4,8 +4,7 @@ set -Eeuo pipefail
 
 COMPOSE_FILE="compose.test.yml"
 COMPOSE_PROJECT="transcendence-test"
-DATABASE_URL="postgresql://test:test@127.0.0.1:5433/transcendence_test?schema=public"
-
+DATABASE_URL="postgresql://test:test@127.0.0.1:5434/transcendence_test?schema=public"
 cleanup() {
     docker compose -p "$COMPOSE_PROJECT" -f "$COMPOSE_FILE" down --remove-orphans
 }
