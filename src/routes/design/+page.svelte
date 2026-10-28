@@ -1,14 +1,7 @@
 
+//basics
 
 .background {
-
-}
-
-.votingBottonYes {
-
-}
-
-.votingBottonNo {
 
 }
 
@@ -37,6 +30,15 @@
 
 .votingChipsDenied {
 
+
+}
+
+// Buttons
+.votingButtonYes {
+
+}
+
+.votingButtonNo {
 
 }
 
