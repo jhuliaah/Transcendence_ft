@@ -3,7 +3,10 @@
 NPM ?= npm
 COMPOSE ?= docker compose
 
-.PHONY: help install dev build preview lint check check-watch format-check test test-integration test-watch verify clean clean-deps compose-up compose-down compose-logs compose-ps
+TEST_COMPOSE := compose.test.yml
+TEST_DATABASE_URL := postgresql://test:test@localhost:5434/transcendence_test?schema=public
+
+.PHONY: help install dev dev-db build preview lint check check-watch format-check test test-integration test-watch verify clean clean-deps compose-up compose-down compose-logs compose-ps
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  make %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -11,8 +14,12 @@ help: ## List available commands
 install: ## Install dependencies from package-lock.json
 	$(NPM) ci
 
-dev: ## Start the Vite development server
-	$(NPM) run dev
+dev: dev-db ## Prepare test database and start Vite development server
+	DATABASE_URL='$(TEST_DATABASE_URL)' $(NPM) run dev
+
+dev-db: ## Start test PostgreSQL and apply pending migrations
+	$(COMPOSE) -f $(TEST_COMPOSE) up -d --wait postgres-test
+	DATABASE_URL='$(TEST_DATABASE_URL)' npx prisma migrate deploy
 
 build: ## Build the production SSR application
 	$(NPM) run build

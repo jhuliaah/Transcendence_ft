@@ -64,7 +64,7 @@ export const actions: Actions = {
 
     return {
       success: true,
-      message: 'Account created successfully. You can log in once the login page is available.'
+      message: 'Account created successfully. You can now log in.'
     };
   }
 };
