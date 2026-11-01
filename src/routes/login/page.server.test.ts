@@ -114,7 +114,7 @@ describe('login action', () => {
       } as never)
     ).rejects.toMatchObject({
       status: 303,
-      location: '/'
+      location: '/dashboard'
     });
 
     expect(createSession).toHaveBeenCalledWith('user-1');
