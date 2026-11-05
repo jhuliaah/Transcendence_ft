@@ -6,7 +6,13 @@ import { getPrisma } from '../../src/lib/server/db';
 const prisma = getPrisma();
 
 beforeEach(async () => {
-  await prisma.user.deleteMany();
+  await prisma.user.deleteMany({
+    where: {
+      email: {
+        in: ['integration@example.com', 'duplicate@example.com']
+      }
+    }
+  });
 });
 
 afterAll(async () => {
