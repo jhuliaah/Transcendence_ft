@@ -65,17 +65,18 @@ docker compose --profile tools run --rm db-tools
 
 ### Useful commands
 
-| Command                 | Description                                                                                          |
-| ----------------------- | ---------------------------------------------------------------------------------------------------- |
-| `make lint`             | Run ESLint.                                                                                          |
-| `make check`            | Run Svelte and TypeScript checks.                                                                    |
-| `make format-check`     | Check formatting with Prettier.                                                                      |
-| `make test`             | Run unit and component tests.                                                                        |
-| `make test-integration` | Run integration tests against a temporary PostgreSQL database (requires Docker).                     |
-| `make test-e2e`         | Run browser end-to-end tests against a temporary PostgreSQL database (requires Docker and Chromium). |
-| `make test-all`         | Run unit, integration, and end-to-end tests.                                                         |
-| `make build`            | Create the production build.                                                                         |
-| `make verify`           | Run formatting, lint, checks, all tests, and the production build.                                   |
+| Command                       | Description                                                                                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `make lint`                   | Run ESLint.                                                                                          |
+| `make check`                  | Run Svelte and TypeScript checks.                                                                    |
+| `make format-check`           | Check formatting with Prettier.                                                                      |
+| `make test`                   | Run unit and component tests.                                                                        |
+| `make test-integration`       | Run integration tests against a temporary PostgreSQL database (requires Docker).                     |
+| `make test-e2e`               | Run browser end-to-end tests against a temporary PostgreSQL database (requires Docker and Chromium). |
+| `make test-all`               | Run unit, integration, and end-to-end tests.                                                         |
+| `make build`                  | Create the production build.                                                                         |
+| `make verify`                 | Run formatting, lint, checks, all tests, and the production build.                                   |
+| `make db-migrate name=<name>` | Create and apply a development Prisma migration with the given name.                                 |
 
 Install the Playwright browser once before running end-to-end tests:
 
@@ -111,12 +112,16 @@ npx playwright install chromium
 
 ## Database Schema
 
-The Prisma schema defines the models used by the implemented authentication flow and leaves room for OAuth providers.
+The Prisma schema defines the models used by authentication and the community data model.
 
 - **User:** `id`, unique normalized `email`, Argon2id `passwordHash`, optional `name` and `avatarUrl`, and `createdAt`.
 - **Session:** hashed token `id`, `userId`, and `expiresAt`; sessions last seven days and are deleted when their user is deleted.
 - **OAuthAccount:** `id`, `provider`, `providerUserId`, and `userId`; provider identity pairs are unique, and accounts belong to a user. OAuth sign-in is not implemented.
+- **Community:** `id`, `name`, optional `description`, `visibility` (`PUBLIC` or `PRIVATE`), and `joinPolicy` (`OPEN` or `APPROVAL`), with creation and update timestamps.
+- **CommunityMembership:** links a user to a community with a `role` (`OWNER`, `ADMIN`, or `MEMBER`) and a `status` (`PENDING`, `ACTIVE`, `REJECTED`, or `REMOVED`). A user can have only one membership record per community. Deleting a community deletes its memberships; a user with memberships cannot be deleted.
+- **Community flows:** The schema and migration are in place, but community creation, joining, and management are not implemented in the application yet.
 - **Migrations:** Stored in `prisma/migrations` and applied with `npm run db:deploy`.
+- **Development migrations:** Use `make db-migrate name=migration_name` to create and apply a migration against the development database.
 - **Health check:** `GET /health` returns HTTP 200 when PostgreSQL is reachable and HTTP 503 otherwise.
 
 ## Features List
@@ -127,6 +132,7 @@ The Prisma schema defines the models used by the implemented authentication flow
 | Login and sessions    | Authenticates users, persists seven-day sessions, and supports logout.    | To be defined  | Implemented     |
 | Protected dashboard   | Requires an authenticated session to access the dashboard.                | To be defined  | Implemented     |
 | Database health check | Reports whether the application can reach PostgreSQL.                     | To be defined  | Implemented     |
+| Community data model  | Defines communities and memberships; application flows are future work.   | To be defined  | Schema only     |
 | OAuth sign-in         | OAuth account schema is present; provider sign-in flows are future work.  | To be defined  | Not implemented |
 
 ## Modules

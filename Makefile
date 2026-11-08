@@ -6,7 +6,7 @@ COMPOSE ?= docker compose
 TEST_COMPOSE := compose.test.yml
 TEST_DATABASE_URL := postgresql://test:test@localhost:5434/transcendence_test?schema=public
 
-.PHONY: help install dev dev-db build preview lint check check-watch format-check test test-integration test-watch test-e2e test-all verify clean clean-deps compose-up compose-down compose-logs compose-ps
+.PHONY: help install dev dev-db build preview lint check check-watch format-check test test-integration test-watch test-e2e test-all verify clean clean-deps compose-up compose-down compose-logs compose-ps db-migrate
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  make %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -69,3 +69,17 @@ compose-down: ## Stop Compose services without deleting database data
 
 compose-logs: ## Follow Compose service logs
 	$(COMPOSE) logs -f
+
+db-migrate: ## Create and apply a development migration (usage: make db-migrate name=migration_name)
+	@if [ -z "$(name)" ]; then \
+		echo "Usage: make db-migrate name=migration_name"; \
+		exit 1; \
+	fi
+	$(COMPOSE) --profile tools run \
+		--build \
+		--rm \
+		--no-deps \
+		-v "$(CURDIR)/prisma:/app/prisma" \
+		-v "$(CURDIR)/src/lib/server/generated/prisma:/app/src/lib/server/generated/prisma" \
+		--entrypoint npx \
+		db-tools prisma migrate dev --name "$(name)"
