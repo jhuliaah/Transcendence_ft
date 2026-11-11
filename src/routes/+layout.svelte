@@ -17,9 +17,12 @@
 
     {#if data.user}
       <div class="flex items-center gap-4">
-        <span class="text-sm text-slate-300">
+        <a
+          href={resolve('/perfil')}
+          class="text-sm text-slate-300 transition hover:text-white"
+        >
           {data.user.name || data.user.email}
-        </span>
+        </a>
 
         <form method="POST" action="/logout">
           <button
