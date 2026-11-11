@@ -1,4 +1,4 @@
- # Design — To-do e guia de estudo
+# Design — To-do e guia de estudo
 
 Checklist para implementar o design do Arenium Lite em **SvelteKit + Svelte 5 + Tailwind CSS 4**. Ele também serve de roteiro para aprender Svelte: cada seção diz o que fazer, o que estudar para conseguir fazer e como saber que ficou pronto.
 
