@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { resolve } from '$app/paths';
   import type { PageProps } from './$types';
 
   let { data }: PageProps = $props();
@@ -16,7 +17,12 @@
 
 <div class="page-container">
   <header class="top-bar">
-    <button class="btn-back" type="button" aria-label="Voltar" onclick={() => goto('/dashboard')}>
+    <button
+      class="btn-back"
+      type="button"
+      aria-label="Voltar"
+      onclick={() => goto(resolve('/dashboard'))}
+    >
       ←
     </button>
     <h1 class="page-title">Seu perfil</h1>
@@ -35,7 +41,7 @@
       <h3 id="communities-title" class="section-title">Suas comunidades</h3>
       <div class="card">
         {#if data.communities.length > 0}
-          {#each data.communities as community}
+          {#each data.communities as community (community.name)}
             <button class="list-item community-item" type="button">
               <span class="comm-avatar" aria-hidden="true">{community.initial}</span>
               <span class="comm-name">{community.name}</span>

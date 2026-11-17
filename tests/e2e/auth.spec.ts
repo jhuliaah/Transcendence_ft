@@ -174,4 +174,28 @@ test.describe('Authentication E2E', () => {
 
     await expect(page).toHaveURL(/\/login$/);
   });
+
+  test('redirects unauthenticated visitors away from the profile', async ({ page }) => {
+    await page.goto('/perfil');
+
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test('allows an authenticated user to access the profile', async ({ page }) => {
+    const user = createTestUser();
+
+    await registerUser(page, user);
+    await page.goto('/login');
+    await page.getByLabel('Email').fill(user.email);
+    await page.getByLabel('Password').fill(user.password);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+
+    await page.goto('/perfil');
+
+    await expect(page).toHaveURL(/\/perfil$/);
+    await expect(page.getByRole('heading', { name: 'Seu perfil' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: user.name })).toBeVisible();
+    await expect(page.getByText(user.email)).toBeVisible();
+    await expect(page.getByText('Você ainda não participa de nenhuma comunidade.')).toBeVisible();
+  });
 });

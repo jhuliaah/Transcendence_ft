@@ -17,10 +17,7 @@
 
     {#if data.user}
       <div class="flex items-center gap-4">
-        <a
-          href={resolve('/perfil')}
-          class="text-sm text-slate-300 transition hover:text-white"
-        >
+        <a href={resolve('/perfil')} class="text-sm text-slate-300 transition hover:text-white">
           {data.user.name || data.user.email}
         </a>
 
