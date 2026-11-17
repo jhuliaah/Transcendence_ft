@@ -1,6 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
   import favicon from '#lib/assets/favicon.svg';
+  import '@fontsource-variable/nunito-sans';
   import '../app.css';
   import type { LayoutProps } from './$types';
 
