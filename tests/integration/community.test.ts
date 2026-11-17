@@ -2,12 +2,19 @@
 
 import { afterAll, beforeEach, expect, it } from 'vitest';
 import { getPrisma } from '../../src/lib/server/db';
+import { createCommunity } from '../../src/lib/server/services/community';
 
 const prisma = getPrisma();
 
 const testEmails = ['community-owner@example.com', 'community-member@example.com'];
 
-const testCommunityNames = ['Integration Community', 'Default Community', 'Cascade Community'];
+const testCommunityNames = [
+  'Integration Community',
+  'Default Community',
+  'Cascade Community',
+  'Service Created Community',
+  'Atomicity Community'
+];
 
 async function cleanup() {
   await prisma.community.deleteMany({
@@ -219,4 +226,104 @@ it('prevents deleting a user who still has a membership', async () => {
       where: { id: community.id }
     })
   ).resolves.not.toBeNull();
+});
+
+it('creates a community through the service with an active owner', async () => {
+  const user = await prisma.user.create({
+    data: {
+      email: testEmails[0],
+      name: 'Community Owner'
+    }
+  });
+
+  const result = await createCommunity(
+    {
+      name: 'Service Created Community',
+      description: 'Created through the community service',
+      visibility: 'PRIVATE',
+      joinPolicy: 'APPROVAL'
+    },
+    user.id
+  );
+
+  expect(result.success).toBe(true);
+
+  if (!result.success) {
+    throw new Error('Community creation unexpectedly failed');
+  }
+
+  const community = await prisma.community.findUnique({
+    where: {
+      id: result.community.id
+    },
+    include: {
+      memberships: true
+    }
+  });
+
+  expect(community).not.toBeNull();
+  expect(community?.name).toBe('Service Created Community');
+  expect(community?.visibility).toBe('PRIVATE');
+  expect(community?.joinPolicy).toBe('APPROVAL');
+  expect(community?.memberships).toHaveLength(1);
+
+  expect(community?.memberships[0].userId).toBe(user.id);
+  expect(community?.memberships[0].role).toBe('OWNER');
+  expect(community?.memberships[0].status).toBe('ACTIVE');
+});
+
+it('stores an empty description as null', async () => {
+  const user = await prisma.user.create({
+    data: {
+      email: testEmails[0]
+    }
+  });
+
+  const result = await createCommunity(
+    {
+      name: 'Service Created Community',
+      description: '',
+      visibility: 'PUBLIC',
+      joinPolicy: 'OPEN'
+    },
+    user.id
+  );
+
+  expect(result.success).toBe(true);
+
+  if (!result.success) {
+    throw new Error('Community creation unexpectedly failed');
+  }
+
+  const community = await prisma.community.findUnique({
+    where: {
+      id: result.community.id
+    }
+  });
+
+  expect(community?.description).toBeNull();
+});
+
+it('does not persist the community when owner creation fails', async () => {
+  await expect(
+    createCommunity(
+      {
+        name: 'Atomicity Community',
+        description: 'This community should not be persisted',
+        visibility: 'PUBLIC',
+        joinPolicy: 'OPEN'
+      },
+      'nonexistent-user-id'
+    )
+  ).rejects.toMatchObject({
+    code: 'P2003'
+  });
+
+  const community = await prisma.community.findFirst({
+    where: {
+      name: 'Atomicity Community'
+    }
+  });
+
+  expect(community).toBeNull();
 });
