@@ -1,39 +1,92 @@
 generator client {
-    provider = "prisma-client"
-    output = "../src/lib/server/generated/prisma"
+  provider = "prisma-client"
+  output   = "../src/lib/server/generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
+  provider = "postgresql"
+}
+
+enum CommunityVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum CommunityJoinPolicy {
+  OPEN
+  APPROVAL
+}
+
+enum CommunityRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  REMOVED
 }
 
 model User {
-    id              String      @id @default(cuid())
-    email           String      @unique
-    passwordHash    String?
-    name            String?
-    avatarUrl       String?
-    createdAt       DateTime    @default(now())
-    sessions        Session[]
-    oauthAccounts   OAuthAccount[]   
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+
+  sessions             Session[]
+  oauthAccounts        OAuthAccount[]
+  communityMemberships CommunityMembership[]
 }
 
 model Session {
-    id           String    @id
-    userId       String
-    expiresAt    DateTime
-    user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@index([userId])
+  @@index([userId])
 }
 
 model OAuthAccount {
-    id                String    @id @default(cuid())
-    provider          String
-    providerUserId    String
-    userId            String
-    user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String @id @default(cuid())
+  provider       String
+  providerUserId String
+  userId         String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@unique([provider, providerUserId])
-    @@index([userId])
+  @@unique([provider, providerUserId])
+  @@index([userId])
+}
+
+model Community {
+  id          String              @id @default(cuid())
+  name        String
+  description String?
+  visibility  CommunityVisibility @default(PUBLIC)
+  joinPolicy  CommunityJoinPolicy @default(OPEN)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  memberships CommunityMembership[]
+}
+
+model CommunityMembership {
+  id          String           @id @default(cuid())
+  userId      String
+  communityId String
+  role        CommunityRole    @default(MEMBER)
+  status      MembershipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, communityId])
+  @@index([communityId, status])
 }
