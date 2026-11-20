@@ -6,7 +6,7 @@ _This project has been created as part of the 42 curriculum by ailbezer, jhualve
 
 This project is a SvelteKit application with PostgreSQL persistence, user registration and login, server-side sessions, and authenticated community creation. The broader product scope and future features are still to be defined by the team.
 
-**Implemented features:** Account registration, login and logout; protected dashboard; persistent sessions; database health endpoint; and community creation with visibility and membership policies.
+**Implemented features:** Account registration, login and logout; protected dashboard; persistent sessions; database health endpoint; community creation with visibility and membership policies; and join requests for approval-based communities.
 
 ## Subject Requirements Checklist
 
@@ -88,7 +88,7 @@ Status reflects the current repository and documentation. “Not verified” mea
 
 `make dev` requires Docker and uses the PostgreSQL test database on `localhost:5434`. The database remains running after stopping the development server. The app reads and writes user and session data in this database.
 
-Available pages are `/cadastro` (registration), `/login`, `/dashboard`, and `/communities/new` (authenticated community creation). The dashboard and community creation page redirect unauthenticated visitors to the login page. `POST /logout` revokes the current session, and `/health` checks the database connection.
+Available pages are `/cadastro` (registration), `/login`, `/dashboard`, `/perfil`, and `/communities/new` (authenticated community creation). The dashboard, profile, and community creation pages redirect unauthenticated visitors to the login page. `POST /logout` revokes the current session, and `/health` checks the database connection.
 
 ### Run with Docker Compose
 
@@ -121,8 +121,9 @@ docker compose --profile tools run --rm db-tools
 | `make lint`                   | Run ESLint.                                                                                          |
 | `make check`                  | Run Svelte and TypeScript checks.                                                                    |
 | `make format-check`           | Check formatting with Prettier.                                                                      |
-| `make test`                   | Run unit and component tests.                                                                        |
-| `make test-integration`       | Run integration tests against a temporary PostgreSQL database (requires Docker).                     |
+| `make test`                   | Run unit and component tests with `vitest.unit.config.ts`.                                           |
+| `make test-watch`             | Run unit and component tests in Vitest watch mode.                                                   |
+| `make test-integration`       | Run integration tests with `vitest.integration.config.ts` against a temporary PostgreSQL database.   |
 | `make test-e2e`               | Run browser end-to-end tests against a temporary PostgreSQL database (requires Docker and Chromium). |
 | `make test-all`               | Run unit, integration, and end-to-end tests.                                                         |
 | `make build`                  | Create the production build.                                                                         |
@@ -174,7 +175,8 @@ flowchart LR
             hooks[Session hook]
             schemas[Zod validation schemas]
             auth[Authentication and session service]
-            community[Community creation service]
+            community[Community creation and membership service]
+            joinRequest[Community join-request service]
             argon[Argon2id password hashing]
             prisma[Prisma client and PostgreSQL adapter]
         end
@@ -191,8 +193,10 @@ flowchart LR
     routes --> schemas
     schemas --> auth
     routes --> community
+    routes --> joinRequest
     community --> schemas
     community --> prisma
+    joinRequest --> prisma
     hooks -->|Read and validate session cookie| auth
     auth --> argon
     auth --> prisma
@@ -229,6 +233,8 @@ flowchart LR
 ├── package.json                             # Dependencies and npm scripts.
 ├── package-lock.json                        # Locked npm dependency versions.
 ├── playwright.config.ts                     # Browser end-to-end test configuration.
+├── vitest.unit.config.ts                    # Unit and component test configuration.
+├── vitest.integration.config.ts             # PostgreSQL integration test configuration.
 ├── prisma/
 │   ├── migrations/
 │   │   ├── 20261012132057_init/
@@ -269,7 +275,9 @@ flowchart LR
 │   │           ├── auth.ts                  # Registration, authentication, and session operations.
 │   │           ├── auth.test.ts             # Authentication and session service tests.
 │   │           ├── community.ts             # Community creation and creator membership.
-│   │           └── community.test.ts        # Community creation service tests.
+│   │           ├── community.test.ts        # Community creation service tests.
+│   │           ├── community-join-request.ts   # Create, inspect, and cancel community join requests.
+│   │           └── community-join-request.test.ts # Join-request service tests.
 │   └── routes/
 │       ├── +layout.server.ts                # Provides the current user to the shared layout.
 │       ├── +layout.svelte                   # Shared navigation and page layout.
@@ -284,6 +292,9 @@ flowchart LR
 │       │   ├── +page.svelte                 # Authenticated dashboard page.
 │       │   └── page.server.test.ts          # Dashboard access tests.
 │       ├── communities/
+│       │   ├── [id]/
+│       │   │   └── join-request/
+│       │   │       └── +server.ts          # Join-request API: POST, GET, and DELETE.
 │       │   └── new/
 │       │       ├── +page.server.ts          # Authenticated community creation action.
 │       │       ├── +page.svelte             # Community creation form.
@@ -301,10 +312,13 @@ flowchart LR
 │   └── robots.txt                           # Search engine crawler instructions.
 ├── tests/
 │   ├── e2e/
-│   │   └── auth.spec.ts                     # Browser end-to-end authentication tests.
+│   │   ├── auth.spec.ts                     # Browser end-to-end authentication tests.
+│   │   ├── community-join-request.spec.ts   # Browser end-to-end join-request tests.
+│   │   └── helpers/                         # Shared Playwright test helpers.
 │   └── integration/
 │       ├── auth.test.ts                     # Registration and login integration tests.
 │       ├── community.test.ts                # Community model and creation integration tests.
+│       ├── community-join-request.test.ts   # Join-request database integration tests.
 │       ├── health.test.ts                   # Health endpoint integration tests.
 │       ├── session.test.ts                  # Persistent session integration tests.
 │       └── user.test.ts                     # User data integration tests.
@@ -322,20 +336,22 @@ The Prisma schema defines the models used by authentication and the community da
 - **Community:** `id`, `name`, optional `description`, `visibility` (`PUBLIC` or `PRIVATE`), and `joinPolicy` (`OPEN` or `APPROVAL`), with creation and update timestamps.
 - **CommunityMembership:** links a user to a community with a `role` (`OWNER`, `ADMIN`, or `MEMBER`) and a `status` (`PENDING`, `ACTIVE`, `REJECTED`, or `REMOVED`). A user can have only one membership record per community. Deleting a community deletes its memberships; a user with memberships cannot be deleted.
 - **Community creation:** Authenticated users can create a community with a name (up to 100 characters), optional description (up to 2000 characters), visibility (`PUBLIC` or `PRIVATE`), and join policy (`OPEN` or `APPROVAL`). The creator is added as an `OWNER` with `ACTIVE` status as part of the same database operation. The form is available at `/communities/new`.
-- **Other community flows:** Community discovery, detail pages, joining, and member management are not implemented yet. After creation, the server redirects to `/communities/<id>`; a detail page for that route is still future work.
+- **Community join requests:** Authenticated users can request membership in an `APPROVAL` community through `POST /communities/<id>/join-request`. `GET` returns the user's own membership status, and `DELETE` cancels a pending request. Open communities, active members, pending requests, and rejected or removed memberships are handled according to the service rules. Community discovery, detail pages, approvals, and broader member management are not implemented yet.
+- **Other community flows:** Community discovery, detail pages, request approval/rejection, and member management are not implemented yet. After creation, the server redirects to `/communities/<id>`; a detail page for that route is still future work.
 - **Migrations:** Stored in `prisma/migrations` and applied with `npm run db:deploy`.
 - **Development migrations:** Use `make db-migrate name=migration_name` to create and apply a migration against the development database.
 - **Health check:** `GET /health` returns HTTP 200 when PostgreSQL is reachable and HTTP 503 otherwise.
 
 ## Features List
 
-| Feature                     | Description                                                                  | Team member(s) | Status      |
-| --------------------------- | ---------------------------------------------------------------------------- | -------------- | ----------- |
-| User registration           | Validates input and stores unique accounts with Argon2id password hashes.    | ailbezer       | Implemented |
-| Login, sessions, and logout | Authenticates users, persists seven-day sessions, and supports logout.       | ailbezer       | Implemented |
-| Protected dashboard         | Requires an authenticated session to access the dashboard.                   | ailbezer       | Implemented |
-| Community creation          | Authenticated users create communities; the creator becomes an active owner. | ailbezer       | Implemented |
-| Database health check       | Reports whether the application can reach PostgreSQL.                        | ailbezer       | Implemented |
+| Feature                     | Description                                                                      | Team member(s) | Status      |
+| --------------------------- | -------------------------------------------------------------------------------- | -------------- | ----------- |
+| User registration           | Validates input and stores unique accounts with Argon2id password hashes.        | ailbezer       | Implemented |
+| Login, sessions, and logout | Authenticates users, persists seven-day sessions, and supports logout.           | ailbezer       | Implemented |
+| Protected dashboard         | Requires an authenticated session to access the dashboard.                       | ailbezer       | Implemented |
+| Community creation          | Authenticated users create communities; the creator becomes an active owner.     | ailbezer       | Implemented |
+| Community join requests     | Users can create, inspect, and cancel pending requests for approval communities. | ailbezer       | Implemented |
+| Database health check       | Reports whether the application can reach PostgreSQL.                            | ailbezer       | Implemented |
 
 ## Modules
 

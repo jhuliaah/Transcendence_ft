@@ -1,30 +1,7 @@
-import { randomUUID } from 'node:crypto';
 import { test, expect } from '@playwright/test';
+import { createTestUser, registerUser, loginUser } from './helpers/auth';
 
 test.describe('Authentication E2E', () => {
-  function createTestUser() {
-    return {
-      name: 'E2E Test User',
-      email: `e2e-${randomUUID()}@example.com`,
-      password: 'e2e-password-123'
-    };
-  }
-
-  async function registerUser(
-    page: import('@playwright/test').Page,
-    user: ReturnType<typeof createTestUser>
-  ) {
-    await page.goto('/cadastro');
-
-    await page.getByLabel('Name (optional)').fill(user.name);
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByLabel('Password').fill(user.password);
-
-    await page.getByRole('button', { name: 'Create account' }).click();
-
-    await expect(page.getByRole('status')).toContainText('Account created successfully');
-  }
-
   async function disableNativeValidation(page: import('@playwright/test').Page) {
     await page.locator('form').evaluate((form) => {
       (form as HTMLFormElement).noValidate = true;
@@ -44,6 +21,7 @@ test.describe('Authentication E2E', () => {
 
     await page.goto('/cadastro');
 
+    await page.getByLabel('Name (optional)').fill(user.name);
     await page.getByLabel('Email').fill(user.email);
     await page.getByLabel('Password').fill(user.password);
 
@@ -84,13 +62,7 @@ test.describe('Authentication E2E', () => {
     const user = createTestUser();
 
     await registerUser(page, user);
-
-    await page.goto('/login');
-
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByLabel('Password').fill(user.password);
-
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await loginUser(page, user);
 
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
@@ -105,7 +77,7 @@ test.describe('Authentication E2E', () => {
     await page.goto('/login');
 
     await page.getByLabel('Email').fill(user.email);
-    await page.getByLabel('Password').fill('incorrect-password');
+    await page.getByLabel('Password').fill('incorrect-password-123');
 
     await page.getByRole('button', { name: 'Sign in' }).click();
 
@@ -133,13 +105,7 @@ test.describe('Authentication E2E', () => {
     const user = createTestUser();
 
     await registerUser(page, user);
-
-    await page.goto('/login');
-
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByLabel('Password').fill(user.password);
-
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await loginUser(page, user);
 
     await expect(page).toHaveURL(/\/dashboard$/);
 
@@ -153,13 +119,7 @@ test.describe('Authentication E2E', () => {
     const user = createTestUser();
 
     await registerUser(page, user);
-
-    await page.goto('/login');
-
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByLabel('Password').fill(user.password);
-
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await loginUser(page, user);
 
     await expect(page).toHaveURL(/\/dashboard$/);
 
@@ -185,10 +145,7 @@ test.describe('Authentication E2E', () => {
     const user = createTestUser();
 
     await registerUser(page, user);
-    await page.goto('/login');
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByLabel('Password').fill(user.password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    await loginUser(page, user);
 
     await page.goto('/perfil');
 
