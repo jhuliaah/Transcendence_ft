@@ -27,6 +27,6 @@ echo "==> Applying Prisma migrations"
 DATABASE_URL="$DATABASE_URL" npx prisma migrate deploy
 
 echo "==> Running integration tests"
-DATABASE_URL="$DATABASE_URL" npx vitest run tests/integration
+DATABASE_URL="$DATABASE_URL" npx vitest run --config vitest.integration.config.ts
 
 echo "==> Integration tests completed"
