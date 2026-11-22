@@ -3,6 +3,9 @@
 import { afterAll, beforeEach, expect, it } from 'vitest';
 import { getPrisma } from '../../src/lib/server/db';
 import { createCommunity } from '../../src/lib/server/services/community';
+import { cleanupTestData } from './helpers/cleanup';
+import { createTestUser } from './helpers/users';
+import { createTestCommunity, createTestMembership } from './helpers/communities';
 
 const prisma = getPrisma();
 
@@ -16,36 +19,24 @@ const testCommunityNames = [
   'Atomicity Community'
 ];
 
-async function cleanup() {
-  await prisma.community.deleteMany({
-    where: {
-      name: { in: testCommunityNames }
-    }
-  });
-
-  await prisma.user.deleteMany({
-    where: {
-      email: { in: testEmails }
-    }
-  });
-}
-
 beforeEach(async () => {
-  await cleanup();
+  await cleanupTestData({
+    userEmails: testEmails,
+    communityNames: testCommunityNames
+  });
 });
 
 afterAll(async () => {
-  await cleanup();
+  await cleanupTestData({
+    userEmails: testEmails,
+    communityNames: testCommunityNames
+  });
+
   await prisma.$disconnect();
 });
 
 it('creates a community with an active owner', async () => {
-  const user = await prisma.user.create({
-    data: {
-      email: testEmails[0],
-      name: 'Community Owner'
-    }
-  });
+  const user = await createTestUser(testEmails[0], 'Community Owner');
 
   const community = await prisma.community.create({
     data: {
@@ -83,11 +74,7 @@ it('creates a community with an active owner', async () => {
 });
 
 it('uses the default values for community and membership', async () => {
-  const user = await prisma.user.create({
-    data: {
-      email: testEmails[0]
-    }
-  });
+  const user = await createTestUser(testEmails[0]);
 
   const community = await prisma.community.create({
     data: {
@@ -113,16 +100,10 @@ it('uses the default values for community and membership', async () => {
 });
 
 it('rejects duplicate memberships for the same user and community', async () => {
-  const user = await prisma.user.create({
-    data: {
-      email: testEmails[0]
-    }
-  });
+  const user = await createTestUser(testEmails[0]);
 
-  const community = await prisma.community.create({
-    data: {
-      name: 'Integration Community'
-    }
+  const community = await createTestCommunity({
+    name: 'Integration Community'
   });
 
   const membership = {
@@ -144,10 +125,8 @@ it('rejects duplicate memberships for the same user and community', async () => 
 });
 
 it('rejects memberships referencing a nonexistent user', async () => {
-  const community = await prisma.community.create({
-    data: {
-      name: 'Integration Community'
-    }
+  const community = await createTestCommunity({
+    name: 'Integration Community'
   });
 
   await expect(
@@ -163,23 +142,15 @@ it('rejects memberships referencing a nonexistent user', async () => {
 });
 
 it('cascades membership deletion when a community is deleted', async () => {
-  const user = await prisma.user.create({
-    data: {
-      email: testEmails[0]
-    }
+  const user = await createTestUser(testEmails[0]);
+
+  const community = await createTestCommunity({
+    name: 'Cascade Community'
   });
 
-  const community = await prisma.community.create({
-    data: {
-      name: 'Cascade Community',
-      memberships: {
-        create: {
-          user: {
-            connect: { id: user.id }
-          }
-        }
-      }
-    }
+  await createTestMembership({
+    userId: user.id,
+    communityId: community.id
   });
 
   await prisma.community.delete({
@@ -194,23 +165,15 @@ it('cascades membership deletion when a community is deleted', async () => {
 });
 
 it('prevents deleting a user who still has a membership', async () => {
-  const user = await prisma.user.create({
-    data: {
-      email: testEmails[0]
-    }
+  const user = await createTestUser(testEmails[0]);
+
+  const community = await createTestCommunity({
+    name: 'Integration Community'
   });
 
-  const community = await prisma.community.create({
-    data: {
-      name: 'Integration Community',
-      memberships: {
-        create: {
-          user: {
-            connect: { id: user.id }
-          }
-        }
-      }
-    }
+  await createTestMembership({
+    userId: user.id,
+    communityId: community.id
   });
 
   await expect(
@@ -229,12 +192,7 @@ it('prevents deleting a user who still has a membership', async () => {
 });
 
 it('creates a community through the service with an active owner', async () => {
-  const user = await prisma.user.create({
-    data: {
-      email: testEmails[0],
-      name: 'Community Owner'
-    }
-  });
+  const user = await createTestUser(testEmails[0], 'Community Owner');
 
   const result = await createCommunity(
     {
@@ -273,11 +231,7 @@ it('creates a community through the service with an active owner', async () => {
 });
 
 it('stores an empty description as null', async () => {
-  const user = await prisma.user.create({
-    data: {
-      email: testEmails[0]
-    }
-  });
+  const user = await createTestUser(testEmails[0]);
 
   const result = await createCommunity(
     {
