@@ -30,6 +30,13 @@ enum MembershipStatus {
   REMOVED
 }
 
+enum CommunityInvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  REVOKED
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -41,6 +48,8 @@ model User {
   sessions             Session[]
   oauthAccounts        OAuthAccount[]
   communityMemberships CommunityMembership[]
+  sentInvitations      CommunityInvitation[] @relation("InvitationSender")
+  receivedInvitations  CommunityInvitation[] @relation("InvitationRecipient")
 }
 
 model Session {
@@ -73,6 +82,7 @@ model Community {
   updatedAt   DateTime            @updatedAt
 
   memberships CommunityMembership[]
+  invitations CommunityInvitation[]
 }
 
 model CommunityMembership {
@@ -89,4 +99,23 @@ model CommunityMembership {
 
   @@unique([userId, communityId])
   @@index([communityId, status])
+}
+
+model CommunityInvitation {
+  id            String                    @id @default(cuid())
+  communityId   String
+  invitedById   String
+  invitedUserId String
+  status        CommunityInvitationStatus @default(PENDING)
+  createdAt     DateTime                  @default(now())
+  expiresAt     DateTime
+  updatedAt     DateTime                  @updatedAt
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  invitedBy   User      @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Restrict)
+  invitedUser User      @relation("InvitationRecipient", fields: [invitedUserId], references: [id], onDelete: Restrict)
+
+  @@index([communityId, status])
+  @@index([invitedUserId, status])
+  @@index([invitedById])
 }

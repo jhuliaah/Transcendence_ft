@@ -8,3 +8,9 @@ export const createCommunitySchema = z.object({
 });
 
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
+
+export const createCommunityInvitationSchema = z.object({
+  invitedUserId: z.string().trim().min(1, 'Invited user ID is required')
+});
+
+export type CreateCommunityInvitationInput = z.infer<typeof createCommunityInvitationSchema>;
