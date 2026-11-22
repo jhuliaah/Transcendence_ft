@@ -32,6 +32,7 @@ lint: ## Run ESLint
 
 check: ## Run Svelte and TypeScript checks
 	$(NPM) run check
+	$(NPM) run check:e2e
 
 format-check: ## Check formatting with Prettier
 	$(NPM) run format:check
