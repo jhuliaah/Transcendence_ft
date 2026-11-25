@@ -6,6 +6,11 @@ export const load: PageServerLoad = async ({ locals }) => {
     redirect(303, '/login');
   }
 
+  // Primeira entrada sem nome: passa antes pela tela de completar perfil.
+  if (!locals.user.name) {
+    redirect(303, '/completar-perfil');
+  }
+
   return {
     user: locals.user
   };

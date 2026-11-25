@@ -23,3 +23,12 @@ it('returns the authenticated user', async () => {
 
   await expect(load(createEvent(user))).resolves.toEqual({ user });
 });
+
+it('sends users without a name to complete their profile', async () => {
+  await expect(
+    load(createEvent({ id: 'user-1', email: 'test@example.com', name: null }))
+  ).rejects.toMatchObject({
+    status: 303,
+    location: '/completar-perfil'
+  });
+});
