@@ -8,3 +8,8 @@ export const createCommunitySchema = z.object({
 });
 
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
+
+// Editing settings accepts exactly the same fields and limits as creation.
+export const updateCommunitySettingsSchema = createCommunitySchema;
+
+export type UpdateCommunitySettingsInput = z.infer<typeof updateCommunitySettingsSchema>;
