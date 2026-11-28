@@ -6,6 +6,9 @@ import { afterAll, beforeEach, expect, it } from 'vitest';
 import { getPrisma } from '../../src/lib/server/db';
 import { createSession, validateSession, revokeSession } from '../../src/lib/server/services/auth';
 
+import { cleanupTestData } from './helpers/cleanup';
+import { createTestUser } from './helpers/users';
+
 const prisma = getPrisma();
 
 const email = 'session-integration@example.com';
@@ -13,22 +16,15 @@ const email = 'session-integration@example.com';
 let userId: string;
 
 beforeEach(async () => {
-  await prisma.user.deleteMany({
-    where: { email }
-  });
+  await cleanupTestData({ userEmails: [email] });
 
-  const user = await prisma.user.create({
-    data: { email }
-  });
+  const user = await createTestUser(email);
 
   userId = user.id;
 });
 
 afterAll(async () => {
-  await prisma.user.deleteMany({
-    where: { email }
-  });
-
+  await cleanupTestData({ userEmails: [email] });
   await prisma.$disconnect();
 });
 

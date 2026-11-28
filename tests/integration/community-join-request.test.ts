@@ -9,53 +9,38 @@ import {
   cancelCommunityJoinRequest
 } from '../../src/lib/server/services/community-join-request';
 
+import { createTestUser } from './helpers/users';
+import { createTestCommunity, createTestMembership } from './helpers/communities';
+import { cleanupTestData } from './helpers/cleanup';
+
 const prisma = getPrisma();
 
 const testEmails = ['join-owner@example.com', 'join-member@example.com', 'join-other@example.com'];
 
 const testCommunityNames = ['Join Request Approval Community', 'Join Request Open Community'];
 
-async function cleanup() {
-  await prisma.community.deleteMany({
-    where: {
-      name: { in: testCommunityNames }
-    }
-  });
-
-  await prisma.user.deleteMany({
-    where: {
-      email: { in: testEmails }
-    }
-  });
-}
-
-async function createUser(email: string) {
-  return prisma.user.create({
-    data: { email }
-  });
-}
-
-async function createCommunity(name: string, joinPolicy: 'OPEN' | 'APPROVAL') {
-  return prisma.community.create({
-    data: {
-      name,
-      joinPolicy
-    }
-  });
-}
-
 beforeEach(async () => {
-  await cleanup();
+  await cleanupTestData({
+    userEmails: testEmails,
+    communityNames: testCommunityNames
+  });
 });
 
 afterAll(async () => {
-  await cleanup();
+  await cleanupTestData({
+    userEmails: testEmails,
+    communityNames: testCommunityNames
+  });
+
   await prisma.$disconnect();
 });
 
 it('creates a pending join request for an approval community', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   const result = await requestCommunityJoin(community.id, user.id);
 
@@ -82,7 +67,7 @@ it('creates a pending join request for an approval community', async () => {
 });
 
 it('rejects a request for a nonexistent community', async () => {
-  const user = await createUser(testEmails[1]);
+  const user = await createTestUser(testEmails[1]);
 
   const result = await requestCommunityJoin('nonexistent-community-id', user.id);
 
@@ -93,8 +78,11 @@ it('rejects a request for a nonexistent community', async () => {
 });
 
 it('rejects a request for an open community', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[1], 'OPEN');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[1],
+    joinPolicy: 'OPEN'
+  });
 
   const result = await requestCommunityJoin(community.id, user.id);
 
@@ -116,8 +104,11 @@ it('rejects a request for an open community', async () => {
 });
 
 it('rejects duplicate pending requests', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   const first = await requestCommunityJoin(community.id, user.id);
   const second = await requestCommunityJoin(community.id, user.id);
@@ -139,15 +130,16 @@ it('rejects duplicate pending requests', async () => {
 });
 
 it('rejects a request from an active member', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
-  await prisma.communityMembership.create({
-    data: {
-      userId: user.id,
-      communityId: community.id,
-      status: 'ACTIVE'
-    }
+  await createTestMembership({
+    userId: user.id,
+    communityId: community.id,
+    status: 'ACTIVE'
   });
 
   const result = await requestCommunityJoin(community.id, user.id);
@@ -172,15 +164,17 @@ it('rejects a request from an active member', async () => {
 it.each(['REJECTED', 'REMOVED'] as const)(
   'allows a new request after a previous %s status',
   async (previousStatus) => {
-    const user = await createUser(testEmails[1]);
-    const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+    const user = await createTestUser(testEmails[1]);
+    const community = await createTestCommunity({
+      name: testCommunityNames[0],
+      joinPolicy: 'APPROVAL'
+    });
 
-    await prisma.communityMembership.create({
-      data: {
-        userId: user.id,
-        communityId: community.id,
-        status: previousStatus
-      }
+    await createTestMembership({
+      userId: user.id,
+      communityId: community.id,
+      role: 'ADMIN',
+      status: previousStatus
     });
 
     const result = await requestCommunityJoin(community.id, user.id);
@@ -203,19 +197,21 @@ it.each(['REJECTED', 'REMOVED'] as const)(
     });
 
     expect(membership?.status).toBe('PENDING');
+    expect(membership?.role).toBe('MEMBER');
   }
 );
 
 it('returns the current membership status', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
-  await prisma.communityMembership.create({
-    data: {
-      userId: user.id,
-      communityId: community.id,
-      status: 'PENDING'
-    }
+  await createTestMembership({
+    userId: user.id,
+    communityId: community.id,
+    status: 'PENDING'
   });
 
   const result = await getCommunityJoinRequest(community.id, user.id);
@@ -232,17 +228,18 @@ it('returns the current membership status', async () => {
 });
 
 it('does not expose another user membership', async () => {
-  const user = await createUser(testEmails[1]);
-  const otherUser = await createUser(testEmails[2]);
+  const user = await createTestUser(testEmails[1]);
+  const otherUser = await createTestUser(testEmails[2]);
 
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
-  await prisma.communityMembership.create({
-    data: {
-      userId: otherUser.id,
-      communityId: community.id,
-      status: 'PENDING'
-    }
+  await createTestMembership({
+    userId: otherUser.id,
+    communityId: community.id,
+    status: 'PENDING'
   });
 
   const result = await getCommunityJoinRequest(community.id, user.id);
@@ -254,8 +251,11 @@ it('does not expose another user membership', async () => {
 });
 
 it('returns null when the user has no membership', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   const result = await getCommunityJoinRequest(community.id, user.id);
 
@@ -266,7 +266,7 @@ it('returns null when the user has no membership', async () => {
 });
 
 it('returns an error when looking up a nonexistent community', async () => {
-  const user = await createUser(testEmails[1]);
+  const user = await createTestUser(testEmails[1]);
 
   const result = await getCommunityJoinRequest('nonexistent-community-id', user.id);
 
@@ -277,8 +277,11 @@ it('returns an error when looking up a nonexistent community', async () => {
 });
 
 it('cancels a pending request and deletes its membership', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   await requestCommunityJoin(community.id, user.id);
 
@@ -299,15 +302,16 @@ it('cancels a pending request and deletes its membership', async () => {
 });
 
 it('does not cancel an active membership', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
-  await prisma.communityMembership.create({
-    data: {
-      userId: user.id,
-      communityId: community.id,
-      status: 'ACTIVE'
-    }
+  await createTestMembership({
+    userId: user.id,
+    communityId: community.id,
+    status: 'ACTIVE'
   });
 
   const result = await cancelCommunityJoinRequest(community.id, user.id);
@@ -330,11 +334,14 @@ it('does not cancel an active membership', async () => {
 });
 
 it('does not cancel another user membership', async () => {
-  const owner = await createUser(testEmails[0]);
-  const user = await createUser(testEmails[1]);
-  const otherUser = await createUser(testEmails[2]);
+  const owner = await createTestUser(testEmails[0]);
+  const user = await createTestUser(testEmails[1]);
+  const otherUser = await createTestUser(testEmails[2]);
 
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   await prisma.communityMembership.createMany({
     data: [
@@ -374,8 +381,11 @@ it('does not cancel another user membership', async () => {
 });
 
 it('handles concurrent requests without creating duplicate memberships', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   const results = await Promise.all([
     requestCommunityJoin(community.id, user.id),
@@ -400,8 +410,11 @@ it('handles concurrent requests without creating duplicate memberships', async (
 });
 
 it('handles concurrent join requests without creating duplicates', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   const results = await Promise.all([
     requestCommunityJoin(community.id, user.id),
@@ -427,8 +440,11 @@ it('handles concurrent join requests without creating duplicates', async () => {
 });
 
 it('handles concurrent cancellation of the same request', async () => {
-  const user = await createUser(testEmails[1]);
-  const community = await createCommunity(testCommunityNames[0], 'APPROVAL');
+  const user = await createTestUser(testEmails[1]);
+  const community = await createTestCommunity({
+    name: testCommunityNames[0],
+    joinPolicy: 'APPROVAL'
+  });
 
   await requestCommunityJoin(community.id, user.id);
 

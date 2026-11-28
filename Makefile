@@ -32,6 +32,7 @@ lint: ## Run ESLint
 
 check: ## Run Svelte and TypeScript checks
 	$(NPM) run check
+	$(NPM) run check:e2e
 
 format-check: ## Check formatting with Prettier
 	$(NPM) run format:check
@@ -73,19 +74,18 @@ compose-down: ## Stop Compose services without deleting database data
 compose-logs: ## Follow Compose service logs
 	$(COMPOSE) logs -f
 
-db-migrate: ## Create and apply a development migration (usage: make db-migrate name=migration_name)
+db-migrate: ## Create and apply a development migration (usage: make db-migrate name=migration_name [create-only=1])
 	@if [ -z "$(name)" ]; then \
-		echo "Usage: make db-migrate name=migration_name"; \
+		echo "Usage: make db-migrate name=migration_name [create-only=1]"; \
 		exit 1; \
 	fi
 	$(COMPOSE) --profile tools run \
 		--build \
 		--rm \
-		--no-deps \
 		-v "$(CURDIR)/prisma:/app/prisma" \
 		-v "$(CURDIR)/src/lib/server/generated/prisma:/app/src/lib/server/generated/prisma" \
 		--entrypoint npx \
-		db-tools prisma migrate dev --name "$(name)"
+		db-tools prisma migrate dev --name "$(name)" $(if $(filter 1,$(create-only)),--create-only,)
 
 prisma-generate: ## Generate Prisma Client
 	npx svelte-kit sync

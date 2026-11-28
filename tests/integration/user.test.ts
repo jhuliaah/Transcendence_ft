@@ -2,17 +2,14 @@
 
 import { afterAll, beforeEach, expect, it } from 'vitest';
 import { getPrisma } from '../../src/lib/server/db';
+import { cleanupTestData } from './helpers/cleanup';
 
 const prisma = getPrisma();
 
+const testEmails = ['integration@example.com', 'duplicate@example.com'];
+
 beforeEach(async () => {
-  await prisma.user.deleteMany({
-    where: {
-      email: {
-        in: ['integration@example.com', 'duplicate@example.com']
-      }
-    }
-  });
+  await cleanupTestData({ userEmails: testEmails });
 });
 
 afterAll(async () => {
