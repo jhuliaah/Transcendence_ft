@@ -440,7 +440,7 @@ it('accepts an invitation and creates an active membership', async () => {
 });
 
 it.each(['PENDING', 'REJECTED', 'REMOVED'] as const)(
-  'reactivates an existing %s membership when accepting an invitation',
+  'reactivates an existing %s membership as MEMBER when accepting an invitation',
   async (previousStatus) => {
     const fixture = await createFixture();
 
@@ -448,7 +448,7 @@ it.each(['PENDING', 'REJECTED', 'REMOVED'] as const)(
       data: {
         userId: fixture.invitee.id,
         communityId: fixture.community.id,
-        role: 'MEMBER',
+        role: 'ADMIN',
         status: previousStatus
       }
     });
@@ -461,7 +461,15 @@ it.each(['PENDING', 'REJECTED', 'REMOVED'] as const)(
 
     const result = await acceptCommunityInvitation(invitation.id, fixture.invitee.id);
 
-    expect(result.success).toBe(true);
+    expect(result).toEqual({
+      success: true,
+      membership: {
+        communityId: fixture.community.id,
+        userId: fixture.invitee.id,
+        role: 'MEMBER',
+        status: 'ACTIVE'
+      }
+    });
 
     const membership = await prisma.communityMembership.findUnique({
       where: {

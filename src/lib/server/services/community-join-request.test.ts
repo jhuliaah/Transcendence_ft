@@ -169,7 +169,8 @@ describe('requestCommunityJoin', () => {
         status: { in: ['REJECTED', 'REMOVED'] }
       },
       data: {
-        status: 'PENDING'
+        status: 'PENDING',
+        role: 'MEMBER'
       }
     });
   });

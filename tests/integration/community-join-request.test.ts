@@ -173,6 +173,7 @@ it.each(['REJECTED', 'REMOVED'] as const)(
     await createTestMembership({
       userId: user.id,
       communityId: community.id,
+      role: 'ADMIN',
       status: previousStatus
     });
 
@@ -196,6 +197,7 @@ it.each(['REJECTED', 'REMOVED'] as const)(
     });
 
     expect(membership?.status).toBe('PENDING');
+    expect(membership?.role).toBe('MEMBER');
   }
 );
 

@@ -95,12 +95,10 @@ export async function requestCommunityJoin(
     }
 
     const updated = await prisma.communityMembership.updateMany({
-      where: {
-        id: existing.id,
-        status: { in: ['REJECTED', 'REMOVED'] }
-      },
+      where: { id: existing.id, status: { in: ['REJECTED', 'REMOVED'] } },
       data: {
-        status: 'PENDING'
+        status: 'PENDING',
+        role: 'MEMBER'
       }
     });
 
