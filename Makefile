@@ -6,7 +6,7 @@ COMPOSE ?= docker compose
 TEST_COMPOSE := compose.test.yml
 TEST_DATABASE_URL := postgresql://test:test@localhost:5434/transcendence_test?schema=public
 
-.PHONY: help install dev dev-db build preview lint check check-watch format-check test test-integration test-watch test-e2e test-all verify clean clean-deps compose-up compose-down compose-logs compose-ps db-migrate
+.PHONY: help install dev dev-db build preview lint check check-watch format-check test test-integration test-watch test-e2e test-all verify clean clean-deps compose-up compose-down compose-logs compose-ps db-migrate prisma-generate format
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_-]+:.*##/ {printf "  make %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -35,6 +35,9 @@ check: ## Run Svelte and TypeScript checks
 
 format-check: ## Check formatting with Prettier
 	$(NPM) run format:check
+
+format: ## Run prettier formater
+	$(NPM) run format
 
 check-watch: ## Run Svelte and TypeScript checks in watch mode
 	$(NPM) run check:watch
@@ -83,3 +86,7 @@ db-migrate: ## Create and apply a development migration (usage: make db-migrate 
 		-v "$(CURDIR)/src/lib/server/generated/prisma:/app/src/lib/server/generated/prisma" \
 		--entrypoint npx \
 		db-tools prisma migrate dev --name "$(name)"
+
+prisma-generate: ## Generate Prisma Client
+	npx svelte-kit sync
+	npx prisma generate
